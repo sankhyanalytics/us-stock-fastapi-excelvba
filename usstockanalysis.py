@@ -56,4 +56,7 @@ def generate_us_stock_summary():
 @app.get("/us-stocks")
 def us_it_stock_summary():
     df = generate_us_stock_summary()
+    df = df.replace([np.inf, -np.inf], np.nan)
+    df = df.fillna(0)
+
     return df.round(4).to_dict(orient="records")
