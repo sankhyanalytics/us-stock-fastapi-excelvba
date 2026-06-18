@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from datetime import datetime, timedelta
 import pandas as pd
 import yfinance as yf
+import numpy as np
 
 # -------------------------------------------------
 # Create FastAPI app
@@ -23,7 +24,7 @@ def generate_us_stock_summary():
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=365)
 
-    # Manually selected US IT stocks
+    # Selected US IT stocks
     symbols = [
         "NVDA", "GOOGL", "AAPL", "MSFT", "AMZN",
         "META", "AVGO", "TSLA", "ORCL", "PLTR"
@@ -51,12 +52,19 @@ def generate_us_stock_summary():
     return summary_df
 
 # -------------------------------------------------
-# API endpoint consumed by Excel VBA
+# API endpoint for Excel / external usage
 # -------------------------------------------------
 @app.get("/us-stocks")
 def us_it_stock_summary():
-    df = generate_us_stock_summary()
-    df = df.replace([np.inf, -np.inf], np.nan)
-    df = df.fillna(0)
+    try:
+        df = generate_us_stock_summary()
 
-    return df.round(4).to_dict(orient="records")
+        # Handle invalid values
+        df = df.replace([np.inf, -np.inf], np.nan)
+        df = df.fillna(0)
+
+        # Return JSON
+        return df.round(4).to_dict(orient="records")
+
+    except Exception as e:
+        return {"error": str(e)}
